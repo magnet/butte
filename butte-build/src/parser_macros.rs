@@ -142,6 +142,13 @@ macro_rules! field {
             .ty($crate::types::Type::$ty)
             .build()
     };
+    ($name:ident, $ty:ident, ($meta:ident)) => {
+        $crate::types::Field::builder()
+            .id($crate::types::Ident::from(stringify!($name)))
+            .ty($crate::types::Type::$ty)
+            .metadata(Some(Metadata::from(vec![$crate::meta!($meta)])))
+            .build()
+    };
     ($name:ident, [ $ty:path ]) => {
         $crate::types::Field::builder()
             .id($crate::types::Ident::from(stringify!($name)))

@@ -776,11 +776,12 @@ pub fn field_decl(input: &str) -> IResult<&str, Field> {
                     tuple((comment_or_space0, equals, comment_or_space0)),
                     terminated(scalar, comment_or_space0),
                 )),
+                comment_or_space0,
                 metadata,
             )),
             tuple((comment_or_space0, semicolon)),
         ),
-        |(comment, name, ty, scalar, metadata)| {
+        |(comment, name, ty, scalar, _, metadata)| {
             Field::builder()
                 .doc(comment)
                 .id(name)
@@ -827,6 +828,14 @@ foo // bar
         let input = "foo :uint=3;";
         let result = field_decl(input);
         let expected = field!(foo, UInt = 3);
+        assert_successful_parse!(result, expected);
+    }
+
+    #[test]
+    fn test_field_decl_string_space_required() {
+        let input = "foo: string (required);";
+        let result = field_decl(input);
+        let expected = field!(foo, String, (required));
         assert_successful_parse!(result, expected);
     }
 
@@ -1134,6 +1143,14 @@ mod metadata_tests {
         let input = "()";
         let result = metadata(input);
         let expected = Some(Metadata::builder().build());
+        assert_successful_parse!(result, expected);
+    }
+
+    #[test]
+    fn test_single_metadata() {
+        let input = "(required)";
+        let result = metadata(input);
+        let expected = Some(Metadata::from(vec![meta!(required)]));
         assert_successful_parse!(result, expected);
     }
 
@@ -1466,6 +1483,17 @@ table HelloReply {
 }";
         let result = table_decl(input);
         let expected = table!(HelloReply, [field!(message, String)]);
+        assert_successful_parse!(result, expected);
+    }
+
+    #[test]
+    fn test_table_required_field() {
+        let input = "\
+table HelloReply {
+  message: string (required);
+}";
+        let result = table_decl(input);
+        let expected = table!(HelloReply, [field!(message, String, (required))]);
         assert_successful_parse!(result, expected);
     }
 }
